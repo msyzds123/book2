@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<meta name="renderer" content="webkit">
+		<title>登录</title>
+		<link rel="stylesheet" href="/book/css/pintuer.css">
+		<link rel="stylesheet" href="/book/css/admin.css">
+		<link rel="stylesheet" href="/book/css/bootstrap.css">
+		<script src="/book/js/jquery.js"></script>
+		<script src="/book/js/bootstrap.js"></script>
+
+		<!--layui-->
+		<script src="/book/js/layerJs/layer.js"></script>
+	</head>
+	<body>
+		<div class="bg"></div>
+		<div class="container">
+			<div class="line bouncein">
+				<div class="xs6 xm4 xs3-move xm4-move">
+					<div style="height:150px;"></div>
+					<div class="media media-y margin-big-bottom">
+					</div>
+					<form id="loginForm" action="index.html" method="post">
+						<div class="panel loginbox" style="margin-top: -100px;">
+							<div class="text-center margin-big padding-big-top">
+								<h1>后台管理中心</h1>
+							</div>
+							<div class="panel-body" style="padding:30px; padding-bottom:10px; padding-top:10px;">
+								<div class="form-group">
+									<div class="field field-icon-right">
+										<input type="text" autofocus="autofocus" class="input input-big" name="username" placeholder="登录账号" data-validate="required:请填写账号" />
+										<span class="icon icon-user margin-small"></span>
+									</div>
+								</div>
+								<div class="form-group">
+									<div class="field field-icon-right">
+										<input type="password" class="input input-big" name="password" placeholder="登录密码" data-validate="required:请填写密码" />
+										<span class="icon icon-key margin-small"></span>
+									</div>
+								</div>
+								<div class="form-group">
+									<div class="field">
+										<input type="text" class="input input-big" name="code" placeholder="填写右侧的验证码" data-validate="required:请填写右侧的验证码" />
+										<img src="/book/code" alt="" width="100" height="32" class="passcode" style="height:43px;cursor:pointer;"
+										 onclick="this.src=this.src+'?'">
+
+									</div>
+								</div>
+								<div class="checkbox">
+									<label style="font-family: 宋体;font-weight: bold;color: gray;">
+										<input style="vertical-align: middle;" type="checkbox" value="">
+										两周内自动登录
+									</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+									&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+									<a href="#" data-toggle="modal" data-target="#myModal" style="font-style: italic;">没账号？点我注册</a>
+								</div>
+							</div>
+							<div style="padding:30px;"><input type="button" id="loginBtn" class="button button-block bg-main text-big input-big" value="登录"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+
+		<!-- 注册弹出框 -->
+		<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+						<h4 class="modal-title" id="myModalLabel">新用户注册</h4>
+					</div>
+					<div class="modal-body">
+						<form id="registForm">
+							<div class="form-group">
+								<label>用户名</label>
+								<input type="text" id="username1" name="username" class="form-control" placeholder="请输入用户名">
+							</div>
+							<div class="form-group">
+								<label>密码</label>
+								<input type="password" name="password" id="password1" class="form-control" placeholder="请输入密码">
+							</div>
+							<div class="form-group">
+								<label>确认密码</label>
+								<input type="password" id="rePassword" class="form-control" placeholder="请输入确认密码">
+							</div>
+
+							<div class="form-group">
+								<input type="button" id="registBtn" style="width: 100%;" class="btn btn-lg btn-success" data-dismiss="modal" value="注 册">
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
+<script>
+
+	$('#loginBtn').click(function (){
+		$.post('/book/user?method=login',$('#loginForm').serialize(),
+			function (data) {
+				if(!data.isOk){
+					layer.msg(data.mess);
+				}else{
+					location.href = "/book";
+				}
+		},'json');
+	});
+
+	//异步校验用户名是否被注册过
+	$('#username1').bind('blur',function (){
+		$.get('/book/user?method=verifyUsername',{
+			username:$('#username1').val()
+		},function (data) {
+			if(data.isOk){
+				layer.msg(data.mess);
+			}
+		},'json');
+	});
+
+	//密码和确认密码是否正确
+	$('#rePassword').blur(function (){
+		if($(this).val() != $('#password1').val()){
+			layer.alert('两次输入密码不一致',{icon:5});
+		}
+	});
+
+	//注册
+	$('#registBtn').click(function (){
+		$.post('/book/user?method=regist',$('#registForm').serialize(),function (data) {
+			if(data.isOk){
+				layer.alert(data.mess,{icon:6});
+			}
+		},'json');
+	});
+</script>

@@ -1,0 +1,201 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>员工面板</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+
+    <script src="/book/js/jquery.min.js" type="text/javascript"></script>
+    <!--MiniUI-->
+    <link href="/book/js/miniui/themes/default/miniui.css" rel="stylesheet" type="text/css" />
+    <script src="/book/js/miniui/miniui.js" type="text/javascript"></script>
+    <script src="/book/js/boot.js" type="text/javascript"></script>
+    <style>
+    html, body
+    {        
+        padding:0;
+        margin:0;
+        border:0;
+        height:100%;
+        overflow:hidden;
+    }
+    </style>
+</head>
+<body>    
+     
+    <form id="form1" method="post">
+        <input name="id" class="mini-hidden" />
+        <div style="padding-left:11px;padding-bottom:5px;">
+
+        </div>
+        <fieldset style="border:solid 1px #aaa;padding:3px;">
+            <legend >基本信息</legend>
+            <div style="padding:5px;">
+                <table style="table-layout:fixed;">
+                    <tr>
+                        <td style="width:80px;">图书名称：</td>
+                        <td style="width:150px;">
+                            <input id="btnEdit1" name="bookid" class="mini-buttonedit" onbuttonclick="onButtonEdit"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width:80px;">借阅者：</td>
+                        <td style="width:150px;">
+                            <input name="borrower" class="mini-textbox" required="true"  emptyText="请输入借阅者"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td >手机号码：</td>
+                        <td >
+                            <input name="phone" class="mini-textbox" required="true" emptyText="请输入手机号码"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td >借阅时间：</td>
+                        <td >
+                            <input name="borrowtime" id="date2" class="mini-datepicker" style="width:150px;" nullValue="null"
+                                   format="yyyy-MM-dd hh:mm:ss" showTime="true" showOkButton="true" showClearButton="false"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </fieldset>
+        <div style="text-align:center;padding:10px;">               
+            <a class="mini-button" onclick="onOk()" style="width:60px;margin-right:20px;">确定</a>
+            <a class="mini-button" onclick="onCancel" style="width:60px;">取消</a>       
+        </div>        
+    </form>
+    <script type="text/javascript">
+
+        //把中国当前时间转换程 yyyy-MM-dd hh:mm:ss
+        function getDate(date){
+            const dd = new Date(date)
+            const y = dd.getFullYear()
+            const m = dd.getMonth() + 1 < 10 ? '0' + (dd.getMonth() + 1) : dd.getMonth() + 1 // 获取当前月份的日期，不足10补0
+            const d = dd.getDate() < 10 ? '0' + dd.getDate() : dd.getDate() // 获取当前几号，不足10补0
+            const h = dd.getHours() < 10 ? '0' + dd.getHours() : dd.getHours() //获取当前小时，小于10补0
+            const mi = dd.getMinutes() < 10 ? '0' + dd.getMinutes() : dd.getMinutes() //获取当前分钟数，不足10补0
+            const ss = dd.getSeconds() < 10 ? '0' + dd.getSeconds() : dd.getSeconds() //获取当前秒数，不足10补0
+            return {
+                fullDate: y + '-' + m + '-' + d + ' ' + h + ':' + mi + ':' + ss,
+                year: y,
+                month: m,
+                date: d,
+                hour: h,
+                minutes: mi,
+                day: dd.getDay()
+            }
+        }
+
+
+        mini.parse();
+
+
+        let form = new mini.Form("form1");
+
+        function SaveData() {
+            let o = form.getData();
+
+            let time = getDate(o.borrowtime);
+            o.borrowtime = time.fullDate;
+            form.validate();
+            if (!form.isValid()) return;
+
+           // let json = mini.encode([o]);
+
+            $.ajax({
+                url: "/book/borrow?method=addBorrow",
+		        type: 'post',
+                data: { data: JSON.stringify(o) },
+                dataType:'json',
+                cache: false,
+                success: function (data) {
+                    alert(data.mess);
+                    CloseWindow("save");
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert(jqXHR.responseText);
+                    CloseWindow();
+                }
+            });
+        }
+
+        //标准方法接口定义
+        function SetData(data) {
+            if (data.action == "edit") {
+                //跨页面传递的数据对象，克隆后才可以安全使用
+                data = mini.clone(data);
+
+                $.ajax({
+                    url: "../data/AjaxService.jsp?method=GetEmployee&id=" + data.id,
+                    cache: false,
+                    success: function (text) {
+                        var o = mini.decode(text);
+                        form.setData(o);
+                        form.setChanged(false);
+
+                        onDeptChanged();
+                        mini.getbyName("position").setValue(o.position);
+                    }
+                });
+            }
+        }
+
+        function GetData() {
+            var o = form.getData();
+            return o;
+        }
+        function CloseWindow(action) {            
+            if (action == "close" && form.isChanged()) {
+                if (confirm("数据被修改了，是否先保存？")) {
+                    return false;
+                }
+            }
+            if (window.CloseOwnerWindow) return window.CloseOwnerWindow(action);
+            else window.close();            
+        }
+        function onOk(e) {
+            SaveData();
+        }
+        function onCancel(e) {
+            CloseWindow("cancel");
+        }
+        //////////////////////////////////
+        function onDeptChanged(e) {
+            var deptCombo = mini.getbyName("dept_id");
+            var positionCombo = mini.getbyName("position");
+            var dept_id = deptCombo.getValue();
+
+            positionCombo.load("../data/AjaxService.jsp?method=GetPositionsByDepartmenId&id=" + dept_id);
+            positionCombo.setValue("");
+        }
+
+
+        //弹出图书种类和图书信息树窗口
+        function onButtonEdit(){
+            let btnEdit = this;
+            mini.open({
+                url: "/book/SelectTreeWindow.html",
+                showMaxButton: false,
+                title: "选择树",
+                width: 350,
+                height: 350,
+                ondestroy: function (action) {
+                    if (action == "ok") {
+                        let iframe = this.getIFrameEl();
+                        let data = iframe.contentWindow.getSelectData();
+                        console.log(data);
+                        data = mini.clone(data);
+                        if (data) {
+                            btnEdit.setValue(data.id);
+                            btnEdit.setText(data.text);
+                        }
+                    }
+                }
+            })
+        }
+
+    </script>
+</body>
+</html>

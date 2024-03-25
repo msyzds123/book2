@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>图书列表</title>
+    <script src="/book/js/jquery.min.js" type="text/javascript"></script>
+    <!--MiniUI-->
+    <link href="/book/js/miniui/themes/default/miniui.css" rel="stylesheet" type="text/css" />
+    <script src="/book/js/miniui/miniui.js" type="text/javascript"></script>
+    <script src="/book/js/boot.js" type="text/javascript"></script>
+</head>
+<body>
+<h1>借阅信息列表</h1>
+<div style="width:100%;">
+    <div class="mini-toolbar" style="border-bottom:0;padding:0px;">
+        <table style="width:100%;">
+            <tr>
+                <td style="width:100%;">
+                    <a class="mini-button" iconCls="icon-add" onclick="add()">添加借阅信息</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div id="datagrid1" class="mini-datagrid" style="width:100%;height:480px;"
+     url="/book/borrow?method=borrowList"  idField="borrowid" allowResize="true"
+     pageSize="5" sizeList="[5,10,15,20]"
+>
+    <div property="columns">
+        <div type="checkcolumn" ></div>
+       <!-- <div type="indexcolumn" ></div>-->
+        <div field="borrowid" width="100" headerAlign="center" allowSort="true">借阅号</div>
+        <div field="bookid" width="80" headerAlign="center" allowSort="true">图书名称</div>
+        <div field="borrower" width="60" renderer="onGenderRenderer" align="center" headerAlign="center">借阅者</div>
+        <div field="phone" width="80" allowSort="true">手机号码</div>
+        <div field="borrowtime" width="120" allowSort="true">借阅时间</div>
+        <div field="returntime" width="120" allowSort="true">归还时间</div>
+        <div name="action" width="120" headerAlign="center" align="center" renderer="onActionRenderer" cellStyle="padding:0;">操作</div>
+    </div>
+</div>
+</body>
+</html>
+<script>
+    mini.parse();
+
+    let grid = mini.get("datagrid1");
+    //加载数据，load之后才能发送请求
+    grid.load();
+
+    function onActionRenderer(e) {
+        let row = e.row;
+        let s = '';
+        if(row.isreturn == '1'){
+            s ='<a class="mini-button" href="javascript:deleteBorrow(\'' + row.borrowid + '\')">删除</a>';
+
+        }else{
+            s = '<a class="mini-button" href="javascript:returnBook(\'' + row.borrowid + '\')">还书</a>    '
+                + '<a class="mini-button" href="javascript:editRow()">删除</a>';
+        }
+        return s;
+    }
+
+    //还书
+    function returnBook(borrowid){
+        $.get('/book/borrow?method=returnBook',{borrowid:borrowid},function (data){
+            if(data.isOk){
+                alert(data.mess);
+            }
+            //重新加载数据
+            grid.reload();
+        },'json');
+    }
+
+    //删除借阅信息
+    function deleteBorrow(borrowid){
+        $.get('/book/borrow?method=deleteBorrow',{borrowid:borrowid},function (data){
+            if(data.isOk){
+                alert(data.mess);
+            }
+            //重新加载数据
+            grid.reload();
+        },'json');
+    }
+
+    //添加图书弹出框
+    function add() {
+        mini.open({
+            targetWindow: window,
+            url: "/book/addBorrow.html",
+            title: "新增借阅信息", width: 350, height: 450,
+            onload: function () {
+                let iframe = this.getIFrameEl();
+                let data = { action: "new" };
+                iframe.contentWindow.SetData(data);
+            },
+            ondestroy: function (action) {
+                //重新查询数据
+                grid.reload();
+            }
+        });
+    }
+
+    //条件过滤
+    grid.on("drawcell", function (e) {
+
+        let field = e.field;
+        let value = e.value;
+        let column = e.column;
+
+        //日期格式化
+        if (field == "borrowtime" || field == "returntime") {
+            if (mini.isDate(value))
+                e.cellHtml = mini.formatDate(value, "yyyy-MM-dd hh:mm:ss");
+        }
+    });
+</script>

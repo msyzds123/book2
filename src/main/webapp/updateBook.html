@@ -1,0 +1,158 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>员工面板</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+
+    <script src="/book/js/jquery.min.js" type="text/javascript"></script>
+    <!--MiniUI-->
+    <link href="/book/js/miniui/themes/default/miniui.css" rel="stylesheet" type="text/css" />
+    <script src="/book/js/miniui/miniui.js" type="text/javascript"></script>
+    <script src="/book/js/boot.js" type="text/javascript"></script>
+    <style>
+    html, body
+    {        
+        padding:0;
+        margin:0;
+        border:0;
+        height:100%;
+        overflow:hidden;
+    }
+    </style>
+</head>
+<body>    
+     
+    <form id="form1" method="post">
+        <input name="bookid" class="mini-hidden" />
+        <div style="padding-left:11px;padding-bottom:5px;">
+
+        </div>
+        <fieldset style="border:solid 1px #aaa;padding:3px;">
+            <legend >基本信息</legend>
+            <div style="padding:5px;">
+                <table style="table-layout:fixed;">
+                    <tr>
+                        <td style="width:80px;">图书名称：</td>
+                        <td style="width:150px;">
+                            <input name="bookname" enabled class="mini-textbox" required="true"  emptyText="请输入帐号"/>
+                        </td>
+                        <td style="width:80px;">出版社：</td>
+                        <td style="width:150px;">
+                            <input name="publisher" class="mini-textbox" required="true"  emptyText="请输入帐号"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td >作者：</td>
+                        <td >
+                            <input name="author" enabled class="mini-textbox" required="true"/>
+                        </td>
+                        <td >图书种类：</td>
+                        <td >
+                            <input name="booktype" id="combo1" class="mini-combobox" emptyText="请选择..." required="true" style="width:150px;" textField="tname" valueField="tid"
+                                   url="/book/books?method=queryAllBookTypes" />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td >库存：</td>
+                        <td >
+                            <input name="remain" enabled required="true" class="mini-spinner" minValue="0" maxValue="1000000" />
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </fieldset>
+        <div style="text-align:center;padding:10px;">               
+            <a class="mini-button" onclick="onOk()" style="width:60px;margin-right:20px;">确定</a>
+            <a class="mini-button" onclick="onCancel" style="width:60px;">取消</a>       
+        </div>        
+    </form>
+    <script type="text/javascript">
+        mini.parse();
+
+
+        let form = new mini.Form("form1");
+
+        function SaveData() {
+            let o = form.getData();
+
+            form.validate();
+            if (!form.isValid()) return;
+
+           // let json = mini.encode([o]);
+
+            $.ajax({
+                url: "/book/books?method=updateBook",
+		        type: 'post',
+                data: { data: JSON.stringify(o) },
+                dataType:'json',
+                cache: false,
+                success: function (data) {
+                    alert(data.mess);
+                    CloseWindow("save");
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert(jqXHR.responseText);
+                    CloseWindow();
+                }
+            });
+        }
+
+        //标准方法接口定义
+        function SetData(data) {
+            if (data.action == "edit") {
+                //跨页面传递的数据对象，克隆后才可以安全使用
+                data = mini.clone(data);
+
+                $.ajax({
+                    url: "/book/books?method=queryById&bookid=" + data.id,
+                    cache: false,
+                    success: function (text) {
+                        let o = mini.decode(text);
+                        console.log(typeof o,o);
+                        form.setData(o);
+                        form.setChanged(false);
+
+                        onDeptChanged();
+                        mini.getbyName("position").setValue(o.position);
+                    }
+                });
+            }
+        }
+
+        function GetData() {
+            var o = form.getData();
+            return o;
+        }
+        function CloseWindow(action) {            
+            if (action == "close" && form.isChanged()) {
+                if (confirm("数据被修改了，是否先保存？")) {
+                    return false;
+                }
+            }
+            if (window.CloseOwnerWindow) return window.CloseOwnerWindow(action);
+            else window.close();            
+        }
+        function onOk(e) {
+            SaveData();
+        }
+        function onCancel(e) {
+            CloseWindow("cancel");
+        }
+        //////////////////////////////////
+        function onDeptChanged(e) {
+            var deptCombo = mini.getbyName("dept_id");
+            var positionCombo = mini.getbyName("position");
+            var dept_id = deptCombo.getValue();
+
+            positionCombo.load("../data/AjaxService.jsp?method=GetPositionsByDepartmenId&id=" + dept_id);
+            positionCombo.setValue("");
+        }
+
+
+
+    </script>
+</body>
+</html>

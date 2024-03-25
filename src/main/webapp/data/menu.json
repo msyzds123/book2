@@ -1,0 +1,60 @@
+[{
+  id: "book",
+  text: "图书信息管理"
+},
+  {
+    id: "bookList",
+    pid: "book",
+    text: "图书列表信息",
+    iconCls: "icon-book",
+    url: "/book/bookList.html",
+    iconPosition: "top"
+  },
+
+  {
+    id: "borrowInfo",
+    text: "借阅信息管理"
+  },
+  {
+    id: "borrowInfoList",
+    pid: "borrowInfo",
+    text: "借阅信息列表",
+    iconCls: "icon-book",
+    url: "/book/borrow.html",
+    iconPosition: "top"
+  },
+
+  {
+    "id": "seatInfo",
+    "text": "座位信息管理"
+  },
+  {
+    "id": "seatInfoList",
+    "pid": "seatInfo",
+    "text": "座位信息列表",
+    "iconCls": "icon-book",
+    "url": "/book/seat.html",
+    "iconPosition": "top"
+  },
+
+  {
+    "id": "buyBookInfo",
+    "text": "购买信息管理"
+  },
+  {
+    "id": "buyBookInfoList",
+    "pid": "buyBookInfo",
+    "text": "图书购买信息列表",
+    "iconCls": "icon-book",
+    "url": "/book/buyBook.html",
+    "iconPosition": "top"
+  },
+  {
+    "id": "orderInfoList",
+    "pid": "buyBookInfo",
+    "text": "订单信息列表",
+    "iconCls": "icon-book",
+    "url": "/book/order.html",
+    "iconPosition": "top"
+  },
+]
